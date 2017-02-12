@@ -2,18 +2,18 @@
 
 # TemperatureThing
 
+This is code to drive a basic temperature monitoring node.
 
-## To build a project (all envs)
+It expects to be run on a
+ - Feather LoRa M0
 
-    platformio run
+communicating via SPI to
+ - BME280 Temp/Humidity/Pressure sensor
+ - FRAM module for storage of LoRa transmission sequence number.
 
-or restricted to the ```teensy36``` env
+## License
+Source code for TemperatureThing is released under the MIT License,
+which can be found in the [LICENSE](LICENSE) file.
 
-    pio -e teensy36 run
-
-## To upload a project
-
-    platformio run --target upload
-or
-
-    pio run -t upload
+## Copyright
+Copyright (c) 2017 Frank Leon Rose
