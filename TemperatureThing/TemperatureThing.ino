@@ -170,7 +170,7 @@ uint16_t battery = 0xFF;
 
 // Schedule TX every this many seconds (might become longer due to duty
 // cycle limitations).
-const unsigned TX_INTERVAL_SEC = 10; // seconds
+const unsigned TX_INTERVAL_SEC = 3600; // Every hour
 
 // Pin mapping
 const lmic_pinmap lmic_pins = {
@@ -296,11 +296,22 @@ void printValues() {
 void sendTemp() {
   printValues();
 
-  uint8_t temp = bme.readTemperature();
-  readings[head--] = temp;
-  if (head >= sizeof(readings)) {
+  /* 0-240: -10 to 50 step 0.25 */
+  float tempc = bme.readTemperature();
+  uint8_t encoded;
+  if (tempc < -10.0) {
+    encoded = 241; // Underflow
+  }
+  else if (tempc>50.0) {
+    encoded = 242; // Overflow
+  }
+  else {
+    encoded = ((tempc+10) * 4.0);
+  }
+  if (--head >= sizeof(readings)) {
     head = sizeof(readings) - 1;
   }
+  readings[head] = encoded;
 
   do_send();
 }
