@@ -212,6 +212,7 @@ void onEvent (ev_t ev) {
             break;
         case EV_TXCOMPLETE:
             Log.Debug(F("EV_TXCOMPLETE (includes waiting for RX windows)" CR));
+            digitalWrite(LED_BUILTIN, LOW);
             if (LMIC.txrxFlags & TXRX_ACK)
               Log.Debug(F("Received ack" CR));
             if (LMIC.dataLen) {
@@ -275,6 +276,7 @@ void do_send() {
 
         dumpBytes("Writing packet: ", packet, sizeof(packet));
 
+        digitalWrite(LED_BUILTIN, HIGH);
         LMIC_setTxData2(1 /*0x13*/, packet, sizeof(packet), 0);
         Log.Debug(F("Packet queued" CR));
     }
@@ -304,6 +306,9 @@ void sendTemp() {
 }
 
 void setup() {
+    pinMode(LED_BUILTIN, OUTPUT);
+    digitalWrite(LED_BUILTIN, LOW);
+
     Log.Init(LOG_LEVEL, 115200);
     // Wait for 15 seconds. If no Serial by then, keep going. We are not connected.
     for (int timeout=0; timeout<15 && !Serial; ++timeout) {
