@@ -164,7 +164,6 @@ void os_getDevKey (u1_t* buf) { }
 
 uint8_t readings[10];
 uint16_t head = 0;
-uint16_t battery = 0xFF;
 
 #define PACKET_FORMAT_ID 0xFA
 
@@ -258,6 +257,29 @@ void dumpBytes(const char *msg, uint8_t *bytes, uint16_t size) {
   Log.Debug_(F(CR));
 }
 
+uint8_t readBatteryLevel() {
+    #define VBATPIN A7
+
+    float measuredvbat = analogRead(VBATPIN);
+    measuredvbat *= 2;    // we divided by 2, so multiply back
+    measuredvbat *= 3.3;  // Multiply by 3.3V, our reference voltage
+    measuredvbat /= 1024; // convert to voltage
+    Log.Debug("VBat: %f", measuredvbat);
+
+    // Normalize to 0-100
+    float minv = 3.2;
+    float maxv = 4.2;
+    uint8_t level = 100 * (measuredvbat - minv) / (maxv - minv);
+    Log.Debug_(" [VBat int: %d]" CR, level);
+    if (level<0) {
+      level = 0;
+    }
+    else if (level>100) {
+      level = 100;
+    }
+    return level;
+}
+
 void do_send() {
     // Check if there is not a current TX/RX job running
     if (LMIC.opmode & OP_TXRXPEND) {
@@ -272,7 +294,7 @@ void do_send() {
         packet[0] = PACKET_FORMAT_ID;
         memcpy(packet + 1, readings + head, remain);
         memcpy(packet + 1 + remain, readings, sizeof(readings) - remain);
-        packet[sizeof(packet)-1] = battery;
+        packet[sizeof(packet)-1] = readBatteryLevel();
 
         dumpBytes("Writing packet: ", packet, sizeof(packet));
 
