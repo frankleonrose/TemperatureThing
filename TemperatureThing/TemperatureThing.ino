@@ -145,15 +145,14 @@ uint32_t loraSeqNo = 0;
 // LoRaWAN NwkSKey, network session key
 // This is the default Semtech key, which is used by the early prototype TTN
 // network.
-static const PROGMEM u1_t NWKSKEY[16] = /* MSB */ { 0x9C, 0xEB, 0x81, 0xB5, 0xE5, 0x68, 0x5E, 0x5D, 0x6A, 0x4E, 0x9F, 0x5F, 0xC1, 0x26, 0x24, 0x48 };
 
 // LoRaWAN AppSKey, application session key
 // This is the default Semtech key, which is used by the early prototype TTN
 // network.
-static const u1_t PROGMEM APPSKEY[16] = /* MSB */ { 0xC2, 0xD3, 0xCB, 0x7E, 0x15, 0xD7, 0x7A, 0xFD, 0xA5, 0xB7, 0x2E, 0xF9, 0x1C, 0x02, 0xCB, 0x95 };
+static const u1_t PROGMEM APPSKEY[16] = /* MSB */ { 0xB7, 0xB3, 0xF6, 0x8A, 0x9E, 0xBE, 0x1B, 0x2B, 0x15, 0x04, 0x7A, 0x00, 0xCB, 0x99, 0xB4, 0xE3 };
 
 // LoRaWAN end-device address (DevAddr)
-static const u4_t DEVADDR = 0x26011EF8 ; // <-- Change this address for every node!
+static const u4_t DEVADDR = 0x260213AD ; // <-- Change this address for every node!
 
 // These callbacks are only used in over-the-air activation, so they are
 // left empty here (we cannot leave them out completely unless
@@ -299,7 +298,7 @@ void do_send() {
         dumpBytes("Writing packet: ", packet, sizeof(packet));
 
         digitalWrite(LED_BUILTIN, HIGH);
-        LMIC_setTxData2(1 /*0x13*/, packet, sizeof(packet), 0);
+        LMIC_setTxData2(1, packet, sizeof(packet), 0);
         Log.Debug(F("Packet queued" CR));
     }
     // Next TX is scheduled after TX_COMPLETE event.
@@ -375,10 +374,10 @@ void setup() {
     uint8_t nwkskey[sizeof(NWKSKEY)];
     memcpy_P(appskey, APPSKEY, sizeof(APPSKEY));
     memcpy_P(nwkskey, NWKSKEY, sizeof(NWKSKEY));
-    LMIC_setSession (0x1, DEVADDR, nwkskey, appskey);
+    LMIC_setSession (0x13, DEVADDR, nwkskey, appskey);
     #else
     // If not running an AVR with PROGMEM, just use the arrays directly
-    LMIC_setSession (0x1, DEVADDR, NWKSKEY, APPSKEY);
+    LMIC_setSession (0x13, DEVADDR, NWKSKEY, APPSKEY);
     #endif
 
     #if defined(CFG_eu868)
