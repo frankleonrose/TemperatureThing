@@ -140,19 +140,20 @@ Adafruit_FRAM_SPI fram = Adafruit_FRAM_SPI(FRAM_CS);
 FramStore store = FramStore(fram, 100);
 
 #define SEQ_NO_OFFSET 0
+#define SEQ_NO_ADJUST 1482285
+#define STORE_SEQ_NO
 uint32_t loraSeqNo = 0;
 
-// LoRaWAN NwkSKey, network session key
-// This is the default Semtech key, which is used by the early prototype TTN
-// network.
-
-// LoRaWAN AppSKey, application session key
-// This is the default Semtech key, which is used by the early prototype TTN
-// network.
+// Lorawan Network Session Key, App Session Key, and Device Address
+// temp-0001
+static const u1_t PROGMEM NWKSKEY[16] = /* MSB */ { 0x05, 0x3B, 0x54, 0x8C, 0xB4, 0x27, 0x1C, 0x78, 0x1E, 0x47, 0x49, 0xE3, 0x92, 0xEB, 0x2C, 0xA8 };
 static const u1_t PROGMEM APPSKEY[16] = /* MSB */ { 0xB7, 0xB3, 0xF6, 0x8A, 0x9E, 0xBE, 0x1B, 0x2B, 0x15, 0x04, 0x7A, 0x00, 0xCB, 0x99, 0xB4, 0xE3 };
-
-// LoRaWAN end-device address (DevAddr)
 static const u4_t DEVADDR = 0x260213AD ; // <-- Change this address for every node!
+
+// temp-0001a
+// static const u1_t PROGMEM NWKSKEY[16] = /* MSB */ { 0xA4, 0xC0, 0xC4, 0x24, 0x75, 0xA2, 0x89, 0x47, 0x6A, 0x4D, 0xC1, 0x2B, 0xB2, 0xDA, 0x60, 0x44 };
+// static const u1_t PROGMEM APPSKEY[16] = /* MSB */ { 0x26, 0x32, 0x0D, 0x85, 0x54, 0xE2, 0x17, 0x57, 0x8C, 0x08, 0xFE, 0xD5, 0xB3, 0x11, 0xCA, 0xF5 };
+// static const u4_t DEVADDR = 0x260214B3; // <-- Change this address for every node!
 
 // These callbacks are only used in over-the-air activation, so they are
 // left empty here (we cannot leave them out completely unless
@@ -179,7 +180,7 @@ const lmic_pinmap lmic_pins = {
 };
 
 void onEvent (ev_t ev) {
-    Log.Debug(F("onEvent [%x]: "), os_getTime());
+    Log.Debug(F("onEvent [%l]: "), os_getTime());
     switch(ev) {
         case EV_SCAN_TIMEOUT:
             Log.Debug(F("EV_SCAN_TIMEOUT" CR));
@@ -218,7 +219,9 @@ void onEvent (ev_t ev) {
             }
             loraSeqNo = LMIC_getSeqnoUp(); // LMIC_getSeqnoUp returns the NEXT seq to use. Store that.
             Log.Debug(F("Sent packet number %d" CR), loraSeqNo);
-            store.writeu32(SEQ_NO_OFFSET, loraSeqNo);
+#if defined(STORE_SEQ_NO)
+            store.writeu32(SEQ_NO_OFFSET, loraSeqNo + SEQ_NO_ADJUST);
+#endif
             break;
         case EV_LOST_TSYNC:
             Log.Debug(F("EV_LOST_TSYNC" CR));
@@ -295,9 +298,12 @@ void do_send() {
         memcpy(packet + 1 + remain, readings, sizeof(readings) - remain);
         packet[sizeof(packet)-1] = readBatteryLevel();
 
+        Log.Debug(F("head %d, remain %d" CR), head, remain);
+        dumpBytes("Readings: ", readings, sizeof(readings));
         dumpBytes("Writing packet: ", packet, sizeof(packet));
 
         digitalWrite(LED_BUILTIN, HIGH);
+
         LMIC_setTxData2(1, packet, sizeof(packet), 0);
         Log.Debug(F("Packet queued" CR));
     }
@@ -373,7 +379,9 @@ void setup() {
     uint8_t appskey[sizeof(APPSKEY)];
     uint8_t nwkskey[sizeof(NWKSKEY)];
     memcpy_P(appskey, APPSKEY, sizeof(APPSKEY));
+    dumpBytes("Appskey: ", appskey, sizeof(appskey));
     memcpy_P(nwkskey, NWKSKEY, sizeof(NWKSKEY));
+    dumpBytes("Nwkskey: ", nwkskey, sizeof(nwkskey));
     LMIC_setSession (0x13, DEVADDR, nwkskey, appskey);
     #else
     // If not running an AVR with PROGMEM, just use the arrays directly
@@ -421,7 +429,7 @@ void setup() {
 
     // Set data rate and transmit power for uplink (note: txpow seems to be ignored by the library)
     Log.Debug(F("LMIC_setDrTxpow" CR));
-    LMIC_setDrTxpow(DR_SF7,14);
+    LMIC_setDrTxpow(DR_SF7, 14);
 
     // default settings
     Log.Debug(F("Begin measurement!" CR));
@@ -437,7 +445,9 @@ void setup() {
         Log.Debug(F("Could not find a valid FRAM module, check wiring!" CR));
         while (1);
     }
-    loraSeqNo = store.readu32(SEQ_NO_OFFSET);
+#if defined(STORE_SEQ_NO)
+    loraSeqNo = store.readu32(SEQ_NO_OFFSET) - SEQ_NO_ADJUST;
+#endif
     LMIC_setSeqnoUp(loraSeqNo);
 
     // fram.writeEnable(true);
