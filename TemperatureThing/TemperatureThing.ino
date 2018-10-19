@@ -69,8 +69,6 @@ uint16_t head = 0;
 // cycle limitations).
 const unsigned TX_INTERVAL_SEC = 3600; // Every hour
 
-static constexpr uint8_t LMIC_UNUSED_PIN = 0xff;
-
 // Pin mapping
 const Arduino_LoRaWAN::lmic_pinmap define_lmic_pins = {
 #if 0 // Feather LoRa wiring (with IO1 <--> GPIO#6)
