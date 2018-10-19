@@ -14,6 +14,9 @@
  *
  *******************************************************************************/
 
+#undef min
+#undef max
+
 #include <SPI.h>
 
 #include <Adafruit_Sensor.h>
@@ -38,9 +41,6 @@ Adafruit_BME280 bme(BME_CS); // hardware SPI
 
 #define FRAM_CS 18
 
-#if !defined(MIN)
-#define MIN(a,b) ((a)<(b) ? (a) : (b))
-#endif
 
 Timer timer;
 
