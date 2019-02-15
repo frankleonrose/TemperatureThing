@@ -48,6 +48,9 @@ Timer timer;
 #define SEQ_NO_LOST_TO_RESET (1482285 + 114856)
 #define SEQ_NO_20171206 522747
 #define SEQ_NO_20171209 523264
+#define SEQ_NO_20180213 523353
+#define SEQ_NO_20190124 523546
+#define SEQ_NO_20190215 605838
 #define STORE_SEQ_NO
 
 // Lorawan Network Session Key, App Session Key, and Device Address
@@ -180,7 +183,7 @@ void printValues() {
 }
 
 void sendTemp() {
-  printValues();
+  // printValues();
 
   /* 0-240: -10 to 50 step 0.25 */
   float tempc = bme.readTemperature();
@@ -242,7 +245,15 @@ void setup() {
         Log.Error(F("Failed to initialize Parameter Store!" CR));
         while (1);
     }
-    pstore.set("FCNTUP", SEQ_NO_20171209);
+    // Update count if we haven't moved beyond it...
+    const int32_t updatedCount = SEQ_NO_20190215;
+    uint32_t currentCount = 0;
+    if (PS_SUCCESS!=pstore.get("FCNTUP", &currentCount)) {
+      currentCount = 0;
+    }
+    if (currentCount<updatedCount) {
+      pstore.set("FCNTUP", updatedCount);
+    }
 
     Log.Debug(F("Registering lorawan event listener!" CR));
     status = lorawan.RegisterListener(onEvent, NULL);
