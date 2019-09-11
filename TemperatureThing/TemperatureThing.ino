@@ -41,8 +41,6 @@ Adafruit_BME280 bme(BME_CS); // hardware SPI
 
 #define FRAM_CS 18
 
-bool Serial_::dtr() { return true; } // Satisfy linkage of MCCI Arduino LoRaWAN Library/LogPrint.cpp
-
 Timer timer;
 
 #define SEQ_NO_LOST_TO_RESET (1482285 + 114856)

@@ -2,6 +2,7 @@
 .clang_complete
 .gcc-flags.json
 .piolibdeps
+.pio
 .vscode
 .vscode/c_cpp_properties.json
 lib/readme.txt
